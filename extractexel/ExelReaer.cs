@@ -17,10 +17,11 @@ namespace extractexel
         {
             FileStream stream = File.Open(filepath, FileMode.Open, FileAccess.Read);
 
-
+            
             IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream);
 
             DataSet = excelReader.AsDataSet();
+            
             excelReader.Close();
         }
         public void Print()
@@ -105,3 +106,56 @@ namespace extractexel
 //foreach (string item in Dlist) Console.WriteLine(item);
 
 //Console.ReadKey();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//            if ((i ==1) && (j != 1))
+//            {
+
+//                XElement column = new XElement("Column");
+//                XAttribute columnNum = new XAttribute("Num", $"{numCounter}");
+
+//                if (string.IsNullOrWhiteSpace(table.Rows[i].ItemArray[j]?.ToString()))
+//                {
+//                    XAttribute columnName = new XAttribute("Name", $"{table.Rows[i - 1].ItemArray[j]}");
+//                    column.Add(columnName);
+//                }
+//                else
+//                {
+//                    XAttribute columnName = new XAttribute("Name", $"{table.Rows[i].ItemArray[j]} {table.Rows[i-1].ItemArray[j]}");
+//                    column.Add(columnName);
+//                }
+//                numCounter++;
+
+//                column.Add(columnNum);
+//                form.Add(column);
+
+
+//            }

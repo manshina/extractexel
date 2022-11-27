@@ -2,7 +2,9 @@
 using extractexel;
 using Microsoft.Office.Interop.Excel;
 using OfficeOpenXml;
+using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.OleDb;
 using System.Security.Cryptography;
 using System.Text;
@@ -20,108 +22,150 @@ string resultpath = "C:\\Users\\Dymok\\Downloads\\Telegram Desktop\\C# Тест�
 ExelReaer exelReaer = new ExelReaer(path);
 
 XDocument xdoc = new XDocument();
-string lastcode = "";
-if (lastcode == "")
-{
 
-}
-XElement document = new XElement("Document");
-XAttribute plsch = new XAttribute("ПлСч11", $"{lastcode}");
+
+
+XElement root = new XElement("root");
+
+XElement date = new XElement("Period");
+XAttribute datevalue = new XAttribute("date", $"{File.GetLastWriteTime(path).Date.ToString("yyyy-MM-dd")}");
+
+date.Add(datevalue);
+
+root.Add(date);
+
+XElement source = new XElement("Source");
+XAttribute sourceClassCode = new XAttribute("ClassCode", "ДМЦ");
+XAttribute sorceCode = new XAttribute("Code", "819");
+
+source.Add(sourceClassCode);
+source.Add(sorceCode);
+date.Add(source);
+
+XElement form = new XElement("Form");
+XAttribute formCode = new XAttribute("Code", "178");
+XAttribute formName = new XAttribute("Name", "Счета в кредитных организациях");
+
+XAttribute formStatus = new XAttribute("Status", "0");
+
+form.Add(formCode);
+form.Add(formName);
+form.Add(formStatus);
+
+
+
 foreach (System.Data.DataTable table in exelReaer.DataSet.Tables)
 {
+    List<string> codes = new List<string>();
     for (int i = 3; i < table.Rows.Count; i++)
     {
-        
-        XElement data = new XElement("DATA");
-        XAttribute column = new XAttribute("СТРОКА", "01");
-        
+
+        string code = $"1{table.Rows[i].ItemArray[1]}";
+        code = code.Remove(code.Length - 3);
+        if (!codes.Contains(code))
+        {
+            codes.Add(code);
+        }
+
+
+
         for (int j = 0; j < table.Columns.Count; j++)
-            if (j == 1)
-            {
-                string code = $"1{table.Rows[i].ItemArray[j]}";
-                lastcode = code.Remove(code.Length - 3);
-            }
-            else
-            {
+        {
 
-                XElement PxElement = new XElement("Px");
-                // создаем для него атрибут name
-                XAttribute number = new XAttribute("NUM", "1");
-                // и два элемента - company и age
-                XAttribute value = new XAttribute("VALUE", $"{table.Rows[i].ItemArray[j]}");
-                PxElement.Add(number);
-                PxElement.Add(value);
-                data.Add(PxElement);
-                
-
-                
-            }
-
-        data.Add(column);
-        document.Add(data);
-        
-        // добавляем два элемента person в корневой элемент
-
-
+        }
     }
+    foreach (var itemCode in codes)
+    {
+        XElement document = new XElement("Document");
+
+
+        XAttribute plsch = new XAttribute("ПлСч11", $"{itemCode}");
+
+        
+
+
+
+
+        document.Add(plsch);
+        for (int i = 3; i < table.Rows.Count; i++)
+        {
+
+
+            string code = $"1{table.Rows[i].ItemArray[1]}";
+            code = code.Remove(code.Length - 3);
+            if (code == itemCode)
+            {
+                XElement data = new XElement("DATA");
+                XAttribute dataString = new XAttribute("СТРОКА", i - 2);
+                data.Add(dataString);
+
+                int columnNumCounter = 1;
+                for (int j = 0; j < table.Columns.Count; j++)
+                {
+
+
+
+                    XElement PxElement = new XElement("Px");
+                    // создаем для него атрибут name
+                    XAttribute number = new XAttribute("NUM", columnNumCounter);
+                    // и два элемента - company и age
+                    XAttribute value = new XAttribute("VALUE", $"{table.Rows[i].ItemArray[j]}");
+                    PxElement.Add(number);
+                    PxElement.Add(value);
+                    data.Add(PxElement);
+
+
+
+                    
+                    if ((i == 3) && (j != 1))
+                    {
+
+                        XElement column = new XElement("Column");
+                        XAttribute columnNum = new XAttribute("Num", $"{columnNumCounter}");
+
+                        if (string.IsNullOrWhiteSpace(table.Rows[0].ItemArray[j]?.ToString()))
+                        {
+                            XAttribute columnName = new XAttribute("Name", $"{table.Rows[1].ItemArray[j]} {table.Rows[0].ItemArray[j-1]}");
+                            column.Add(columnName);
+                        }
+                        else
+                        {
+                            XAttribute columnName = new XAttribute("Name", $"{table.Rows[1].ItemArray[j]} {table.Rows[0].ItemArray[j]}");
+                            column.Add(columnName);
+                        }
+
+                        columnNumCounter++;
+                        column.Add(columnNum);
+                        form.Add(column);
+
+
+                    }
+
+
+
+                }
+                document.Add(data);
+
+
+            }
+
+        }
+
+        form.Add(document);
+    }
+
+
+
+
+
 }
-xdoc.Add(document);
+source.Add(form);
+
+
+xdoc.Add(root);
 
 //сохраняем документ
 xdoc.Save(xmlpath);
 
 
-//XDocument xdoc = new XDocument();
-//// создаем первый элемент person
 
-//// создаем второй элемент person
-//XElement bob = new XElement("Px");
-
-//// создаем для него атрибут name
-//XAttribute bobNameAttr = new XAttribute("NUM", "1");
-//// и два элемента - company и age
-//XAttribute bobCompanyElem = new XAttribute("VALUE", "Федеральные");
-
-//bob.Add(bobNameAttr);
-
-//bob.Add(bobCompanyElem);
-
-//XElement bob2 = new XElement("Px");
-//// создаем для него атрибут name
-//XAttribute bobNameAttr2 = new XAttribute("NUM", "2");
-//// и два элемента - company и age
-//XAttribute bobCompanyElem2 = new XAttribute("VALUE", "4600");
-
-//bob2.Add(bobNameAttr2);
-
-//bob2.Add(bobCompanyElem2);
-//XElement bob3 = new XElement("Px");
-//// создаем для него атрибут name
-//XAttribute bobNameAttr3 = new XAttribute("NUM", "3");
-//// и два элемента - company и age
-//XAttribute bobCompanyElem3 = new XAttribute("VALUE", "45");
-
-//bob3.Add(bobNameAttr3);
-
-//bob3.Add(bobCompanyElem3);
-
-//// создаем корневой элемент
-//XElement people = new XElement("DATA");
-//XAttribute ar = new XAttribute("СТРОКА", "01");
-//// добавляем два элемента person в корневой элемент
-//people.Add(ar);
-//people.Add(bob);
-//people.Add(bob2);
-//people.Add(bob3);
-//// добавляем корневой элемент в документ
-//xdoc.Add(people);
-////сохраняем документ
-//xdoc.Save(xmlpath);
-
-//string _byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
-
-//XmlDocument doc = new XmlDocument();
-//using (System.IO.StreamReader sr = new System.IO.StreamReader(re, System.Text.Encoding.GetEncoding(1251)))
-//    doc.Load(sr);
-
-Console.WriteLine("Data saved");
